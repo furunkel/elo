@@ -26,7 +26,14 @@ long lastSendTime = 0;
 const int minInterval = 25000000; 
 bool isPressed = false;
 
+#define MIN_X 49
+#define MAX_X 4063
 
+#define MIN_Y 119
+#define MAX_Y 4026
+
+
+#define CLAMP(x, low, high)  (((x) > (high)) ? (high) : (((x) < (low)) ? (low) : (x)))
 
 bool exitNow = false;
 //int minX=4080, maxX=0, minY=4080, maxY=0;
@@ -69,14 +76,14 @@ int uinput_connect(wchar_t* wstr){
     uidev.id.product = PRODUCT;
     uidev.id.version = 1;
 
-    /*uidev.absmin[ABS_X] = 51;
-    uidev.absmax[ABS_X] = 4080;
-    uidev.absmin[ABS_Y] = 87;
-    uidev.absmax[ABS_Y] = 4080;*/
-    uidev.absmin[ABS_MT_POSITION_X] = 51;
-    uidev.absmax[ABS_MT_POSITION_X] = 4080;
-    uidev.absmin[ABS_MT_POSITION_Y] = 87;
-    uidev.absmax[ABS_MT_POSITION_Y] = 4080;
+    uidev.absmin[ABS_X] = MIN_X;
+    uidev.absmax[ABS_X] = MAX_X;
+    uidev.absmin[ABS_Y] = MIN_Y;
+    uidev.absmax[ABS_Y] = MAX_Y;
+    uidev.absmin[ABS_MT_POSITION_X] = MIN_X; //51;
+    uidev.absmax[ABS_MT_POSITION_X] = MAX_X;//4080;
+    uidev.absmin[ABS_MT_POSITION_Y] = MIN_Y;
+    uidev.absmax[ABS_MT_POSITION_Y] = MAX_Y;
     /*uidev.absmin[ABS_PRESSURE] = 10;
     uidev.absmax[ABS_PRESSURE] = 1000;*/
 
@@ -121,7 +128,7 @@ void releaseButton(int fd, const unsigned char *data){
     
     isPressed = false;
     
-    usleep(200000);
+    usleep(20000);
 }
 
 void pressButton(int fd, const unsigned char *data){
@@ -185,7 +192,7 @@ void pressButton(int fd, const unsigned char *data){
         memset(&ev, 0, sizeof(struct input_event));
         ev.type = EV_ABS;
         ev.code = ABS_MT_POSITION_Y;
-        ev.value = Y;
+        ev.value = MIN_Y + (MAX_Y - Y);
         write(fd,&ev,sizeof(ev));
 
         if (!isPressed){
@@ -303,7 +310,7 @@ int run(){
 		
 		if (exitNow) break;
 		
-		usleep(10000);
+		usleep(1000);
 	}
 	
 	hid_close(handle);
