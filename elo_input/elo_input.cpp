@@ -60,10 +60,6 @@ int uinput_connect(wchar_t* wstr){
 	die("ioctl: ");
     if (ioctl(fd, UI_SET_ABSBIT, ABS_Y) < 0)
 	die("ioctl: ");
-    if (ioctl(fd, UI_SET_ABSBIT, ABS_MT_POSITION_X) < 0)
-	die("ioctl: ");
-    if (ioctl(fd, UI_SET_ABSBIT, ABS_MT_POSITION_Y) < 0)
-	die("ioctl: ");
 
     wcstombs(buf,wstr,sizeof(buf));
 
@@ -80,12 +76,6 @@ int uinput_connect(wchar_t* wstr){
     uidev.absmax[ABS_X] = MAX_X;
     uidev.absmin[ABS_Y] = MIN_Y;
     uidev.absmax[ABS_Y] = MAX_Y;
-    uidev.absmin[ABS_MT_POSITION_X] = MIN_X; //51;
-    uidev.absmax[ABS_MT_POSITION_X] = MAX_X;//4080;
-    uidev.absmin[ABS_MT_POSITION_Y] = MIN_Y;
-    uidev.absmax[ABS_MT_POSITION_Y] = MAX_Y;
-    /*uidev.absmin[ABS_PRESSURE] = 10;
-    uidev.absmax[ABS_PRESSURE] = 1000;*/
 
     if(write(fd, &uidev, sizeof(uidev)) < 0)
         die("error: write");
@@ -103,22 +93,6 @@ void releaseButton(int fd, const unsigned char *data){
     ev.code = BTN_TOUCH;
     ev.value = 0;
     write(fd,&ev,sizeof(ev));
-    
-    ev.type = EV_ABS;
-    ev.code = ABS_MT_TOUCH_MAJOR;
-    ev.value = 0;
-    write(fd,&ev,sizeof(ev));
-    
-    /*ev.type = EV_ABS;
-    ev.code = ABS_PRESSURE;
-    ev.value = 0;
-    write(fd,&ev,sizeof(ev));*/
-    
-    /*memset(&ev, 0, sizeof(struct input_event));
-    ev.type = EV_SYN;
-    ev.code = SYN_MT_REPORT;
-    ev.value = 0;
-    write(fd,&ev,sizeof(ev));*/
     
     memset(&ev, 0, sizeof(struct input_event));
     ev.type = EV_SYN;
@@ -152,55 +126,21 @@ void pressButton(int fd, const unsigned char *data){
         int X = data[5] + 255 * data[6];
         int Y = data[10] + 255 * data[11];
         
-        /*int Y = data[5] + 255 * data[6];
-        int X = data[10] + 255 * data[11];*/
         
-        //printf("X: %d LX: %d Y: %d LY: %d\n", X, lastX, Y, lastY);
-        
-        //X: 2079 LX: 2077 Y: 1715 LY: 1716
-        /*if (
-    	    (((X < lastX) && (X > lastX - noise)) ||
-    	    ((X > lastX) && (X < lastX + noise))) &&
-    	    (((Y < lastY) && (Y > lastY - noise)) ||
-    	    ((Y > lastY) && (Y < lastY + noise)))
-        ){
-    	//    printf("SKIP\n");
-    	    return;
-        }*/
-        
-        /*lastX = X;
-        lastY = Y;*/
-        
-        /*memset(&ev, 0, sizeof(struct input_event));
+        memset(&ev, 0, sizeof(struct input_event));
         ev.type = EV_ABS;
         ev.code = ABS_X;
         ev.value = X;
-        write(fd,&ev,sizeof(ev));*/
-        
-        memset(&ev, 0, sizeof(struct input_event));
-        ev.type = EV_ABS;
-        ev.code = ABS_MT_POSITION_X;
-        ev.value = X;
         write(fd,&ev,sizeof(ev));
 
-        /*memset(&ev, 0, sizeof(struct input_event));
-        ev.type = EV_ABS;
-        ev.code = ABS_Y;
-        ev.value = Y;
-        write(fd,&ev,sizeof(ev));*/
         
         memset(&ev, 0, sizeof(struct input_event));
         ev.type = EV_ABS;
-        ev.code = ABS_MT_POSITION_Y;
+        ev.code = ABS_Y;
         ev.value = MIN_Y + (MAX_Y - Y);
         write(fd,&ev,sizeof(ev));
 
         if (!isPressed){
-    	    memset(&ev, 0, sizeof(struct input_event));
-    	    ev.type = EV_ABS;
-    	    ev.code = ABS_MT_TOUCH_MAJOR;
-    	    ev.value = 1;
-    	    write(fd,&ev,sizeof(ev));
     	    
     	    memset(&ev, 0, sizeof(struct input_event));
     	    ev.type = EV_KEY;
@@ -209,18 +149,6 @@ void pressButton(int fd, const unsigned char *data){
     	    write(fd,&ev,sizeof(ev));
     	    isPressed = true;
         }
-        
-        /*memset(&ev, 0, sizeof(struct input_event));
-        ev.type = EV_ABS;
-        ev.code = ABS_PRESSURE;
-        ev.value = 1;
-        write(fd,&ev,sizeof(ev));*/
-
-        memset(&ev, 0, sizeof(struct input_event));
-        ev.type = EV_SYN;
-        ev.code = SYN_MT_REPORT;
-        ev.value = 0;
-        write(fd,&ev,sizeof(ev));
         
         memset(&ev, 0, sizeof(struct input_event));
         ev.type = EV_SYN;
